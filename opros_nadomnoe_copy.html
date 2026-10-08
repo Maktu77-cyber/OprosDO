@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Опрос учителей индивидуального обучения на дому</title>
+<style>
+:root{--navy:#0a2a52;--gold:#f2a71b;--bg:#eef4fa;--card:#fff;--border:#d6e2ee;--text:#0b2a50;--muted:#65778a;--ok:#2e7d32;--err:#9b2424}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:760px;margin:0 auto;padding:16px 12px 34px}.hero{background:var(--navy);color:#fff;border-radius:22px;padding:22px 18px}
+.tag{display:inline-block;background:var(--gold);color:var(--navy);font-weight:700;font-size:13px;padding:6px 10px;border-radius:999px;margin-bottom:10px}
+h1{margin:0;font-size:27px;line-height:1.18}.intro{margin-top:10px;color:#dce9f5;font-size:15px;line-height:1.45}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px 16px;margin-top:14px}
+.title{font-size:19px;font-weight:700;line-height:1.3;margin-bottom:6px}.hint{color:var(--muted);font-size:14px;line-height:1.4;margin-bottom:12px}
+.counter{display:inline-block;background:#fff4d6;border:1px solid #f4d58a;border-radius:10px;padding:7px 10px;font-size:14px;font-weight:700;margin-bottom:8px}
+.option{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--border);border-radius:14px;margin:8px 0;background:#fff;cursor:pointer}
+.option.selected{border-color:var(--gold);background:#fff9e9}
+input[type=checkbox]{width:20px;height:20px;margin-top:1px;accent-color:var(--navy);flex:0 0 auto}
+input[type=text],textarea{width:100%;border:1px solid var(--border);border-radius:13px;padding:13px;font:inherit;font-size:16px;color:var(--text);background:#fff;outline:none}
+textarea{min-height:96px;resize:vertical}.actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
+button{min-height:50px;border:0;border-radius:15px;font-size:17px;font-weight:700;cursor:pointer;padding:13px 16px}
+.primary{background:var(--gold);color:var(--navy)}.secondary{background:#fff;color:var(--navy);border:1px solid var(--border)}
+.status{display:none;margin-top:12px;padding:12px;border-radius:12px;font-size:14px;line-height:1.4}
+.status.ok{display:block;color:var(--ok);background:#edf8ee;border:1px solid #c7e5c9}.status.err{display:block;color:var(--err);background:#fff0f0;border:1px solid #efc1c1}
+.preview{display:none;white-space:pre-wrap;background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:12px;font-size:14px;line-height:1.45}
+.footer{color:var(--muted);text-align:center;font-size:12px;margin-top:18px}
+@media(min-width:640px){h1{font-size:32px}.card{padding:22px}.actions{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero">
+<div class="tag">ОПРОС</div>
+<h1>Запрос учителей индивидуального обучения на дому</h1>
+<div class="intro">Ответьте на несколько вопросов. В конце нажмите «Скопировать ответ» и отправьте скопированный текст в рабочий чат.</div>
+</section>
+
+<form id="survey">
+<section class="card">
+<div class="title">1. Какие вопросы сейчас наиболее актуальны для вас?</div>
+<div class="hint">Выберите или укажите от 1 до 3 тем.</div>
+<div class="counter" id="counter">Выбрано: 0 из 3</div>
+<div id="topics"></div>
+<div class="hint" style="margin-top:14px;margin-bottom:7px">Если нужной темы нет в списке:</div>
+<input id="otherTopic" type="text" placeholder="Напишите свою тему">
+</section>
+
+<section class="card">
+<div class="title">2. С какой конкретной трудностью вы чаще всего сталкиваетесь?</div>
+<div class="hint">Можно написать коротко, своими словами.</div>
+<textarea id="difficulty" placeholder="Например: ребёнок отказывается переходить к новому заданию..."></textarea>
+</section>
+
+<section class="card">
+<div class="title">3. Что вам хотелось бы получить от специалистов на семинаре?</div>
+<div class="hint">Можно выбрать несколько вариантов.</div>
+<div id="formats"></div>
+</section>
+
+<section class="card">
+<div class="title">4. Есть ли конкретный вопрос или ситуация, которую стоит разобрать?</div>
+<div class="hint">Необязательно.</div>
+<textarea id="caseText" placeholder="Напишите вопрос или опишите ситуацию"></textarea>
+</section>
+
+<div id="status" class="status"></div>
+<div class="actions">
+<button class="primary" type="submit">Скопировать ответ</button>
+<button class="secondary" id="previewBtn" type="button">Показать текст ответа</button>
+</div>
+<div id="preview" class="preview"></div>
+</form>
+
+<div class="footer">ФИО и персональные данные не запрашиваются. Ответ никуда автоматически не отправляется.</div>
+</div>
+
+<script>
+const topicOptions=[
+'Нежелательное поведение ребёнка',
+'Коммуникация с неговорящим или малоговорящим ребёнком',
+'Мотивация и включение ребёнка в занятие',
+'Эмоциональные реакции и саморегуляция',
+'Сенсорные особенности',
+'Организация занятия с обучающимся с ТМНР',
+'Подбор доступных заданий с учётом возможностей ребёнка',
+'Взаимодействие с родителями'
+];
+const formatOptions=[
+'Конкретные практические приёмы',
+'Разбор реальных ситуаций',
+'Алгоритмы действий в сложных ситуациях',
+'Рекомендации специалистов',
+'Памятки и готовые материалы',
+'Ответы на вопросы педагогов'
+];
+
+function renderOptions(containerId,items,name){
+  const c=document.getElementById(containerId);
+  items.forEach(item=>{
+    const label=document.createElement('label');
+    label.className='option';
+    const input=document.createElement('input');
+    input.type='checkbox'; input.name=name; input.value=item;
+    const span=document.createElement('span'); span.textContent=item;
+    label.append(input,span);
+    input.addEventListener('change',()=>{
+      if(name==='topics'){
+        if(getTopicCount()>3){input.checked=false;showStatus('Можно выбрать или указать не более трёх тем.','err')}else clearStatus();
+        updateTopicUI();
+      }else label.classList.toggle('selected',input.checked);
+    });
+    c.appendChild(label);
+  });
+}
+function checkedValues(name){return [...document.querySelectorAll('input[name="'+name+'"]:checked')].map(x=>x.value)}
+function getOtherTopic(){return document.getElementById('otherTopic').value.trim()}
+function getTopicCount(){return checkedValues('topics').length+(getOtherTopic()?1:0)}
+function updateTopicUI(){
+  document.getElementById('counter').textContent='Выбрано: '+getTopicCount()+' из 3';
+  document.querySelectorAll('#topics .option').forEach(l=>l.classList.toggle('selected',l.querySelector('input').checked));
+}
+function showStatus(text,type){const e=document.getElementById('status');e.textContent=text;e.className='status '+type}
+function clearStatus(){const e=document.getElementById('status');e.textContent='';e.className='status'}
+function buildAnswer(){
+  const topics=checkedValues('topics'), other=getOtherTopic(), total=topics.length+(other?1:0);
+  if(total<1) throw new Error('Выберите хотя бы одну тему или напишите свой вариант.');
+  if(total>3) throw new Error('Можно выбрать или указать не более трёх тем.');
+  const allTopics=other?[...topics,'Другая тема: '+other]:topics;
+  const difficulty=document.getElementById('difficulty').value.trim();
+  const formats=checkedValues('formats');
+  const caseText=document.getElementById('caseText').value.trim();
+  return [
+    'ОПРОС: индивидуальное обучение на дому','',
+    '1. Актуальные темы:',allTopics.map(x=>'• '+x).join('\n'),'',
+    '2. Основная трудность:',difficulty||'—','',
+    '3. Что хотелось бы получить на семинаре:',formats.length?formats.map(x=>'• '+x).join('\n'):'—','',
+    '4. Вопрос / ситуация для разбора:',caseText||'—'
+  ].join('\n');
+}
+async function copyText(text){
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}
+  const a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.focus();a.select();
+  const ok=document.execCommand('copy');document.body.removeChild(a);return ok;
+}
+
+renderOptions('topics',topicOptions,'topics');
+renderOptions('formats',formatOptions,'formats');
+
+document.getElementById('otherTopic').addEventListener('input',()=>{
+  updateTopicUI();
+  if(getTopicCount()>3) showStatus('С учётом своей темы можно указать не более трёх тем.','err'); else clearStatus();
+});
+
+document.getElementById('previewBtn').addEventListener('click',()=>{
+  try{
+    const t=buildAnswer(), p=document.getElementById('preview');
+    p.textContent=t;p.style.display='block';clearStatus();
+  }catch(e){showStatus(e.message,'err')}
+});
+
+document.getElementById('survey').addEventListener('submit',async e=>{
+  e.preventDefault();
+  try{
+    const t=buildAnswer(), ok=await copyText(t), p=document.getElementById('preview');
+    p.textContent=t;p.style.display='block';
+    if(ok) showStatus('Ответ скопирован. Теперь вставьте его в рабочий чат и отправьте.','ok');
+    else showStatus('Не удалось скопировать автоматически. Ниже показан готовый текст — выделите и скопируйте его.','err');
+  }catch(err){showStatus(err.message,'err')}
+});
+</script>
+</body>
+</html>
